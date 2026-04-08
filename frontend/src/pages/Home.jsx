@@ -46,8 +46,9 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="auth-container">
-        <div className="spinner" style={{ width: 40, height: 40, borderWidth: 3 }}></div>
+      <div className="loading-screen">
+        <div className="spinner spinner-large"></div>
+        <p>Loading your dashboard...</p>
       </div>
     );
   }
@@ -60,55 +61,73 @@ export default function Home() {
     day: 'numeric',
   });
 
+  const accountAgeDays = Math.max(
+    1,
+    Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+  );
+
   return (
     <div className="dashboard-container">
-      {/* Navigation Bar */}
       <nav className="dashboard-nav">
         <div className="nav-brand">
-          <div className="nav-logo">🔐</div>
-          <h2>AuthVault</h2>
+          <div className="nav-logo">AS</div>
+          <div>
+            <p className="nav-label">Auth Suite</p>
+            <h2>Dashboard</h2>
+          </div>
         </div>
         <button className="btn-logout" onClick={handleLogout}>
-          Sign Out
+          Log Out
         </button>
       </nav>
 
-      {/* Main Content */}
       <main className="dashboard-content">
         <section className="welcome-section">
-          <span className="welcome-emoji">👋</span>
-          <h1>
-            Welcome, <span className="gradient-text">{user.username}</span>!
-          </h1>
-          <p>You're successfully authenticated. Here's your account overview.</p>
+          <div>
+            <p className="section-kicker">Account Overview</p>
+            <h1>
+              Good to see you, <span className="accent-text">{user.username}</span>.
+            </h1>
+            <p>
+              Your session is active and your protected profile route is available.
+            </p>
+          </div>
+          <div className="status-badge">
+            <span className="status-dot"></span>
+            Secure session active
+          </div>
         </section>
 
         <div className="info-cards">
           <div className="info-card">
-            <span className="info-card-icon">👤</span>
             <div className="info-card-label">Username</div>
             <div className="info-card-value">{user.username}</div>
           </div>
 
           <div className="info-card">
-            <span className="info-card-icon">📧</span>
             <div className="info-card-label">Email</div>
             <div className="info-card-value">{user.email}</div>
           </div>
 
           <div className="info-card">
-            <span className="info-card-icon">📅</span>
             <div className="info-card-label">Member Since</div>
             <div className="info-card-value">{memberSince}</div>
+          </div>
+
+          <div className="info-card">
+            <div className="info-card-label">Account Age</div>
+            <div className="info-card-value">{accountAgeDays} days</div>
           </div>
         </div>
 
         <div className="status-section">
-          <div className="status-badge">
-            <span className="status-dot"></span>
-            Authenticated & Secure
-          </div>
-          <p>Your session is active. Token expires in 24 hours.</p>
+          <h3>Security checklist</h3>
+          <p>Your token expires in 24 hours. Keep your account protected with these basics:</p>
+          <ul className="status-list">
+            <li>Use a unique password and update it regularly.</li>
+            <li>Log out when using a shared device.</li>
+            <li>Never share your JWT token in public channels.</li>
+          </ul>
         </div>
       </main>
     </div>

@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+const showcasePoints = [
+  'Create a secure profile in seconds',
+  'Automatic login after registration',
+  'Protected dashboard with account details',
+];
+
 export default function Register() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -65,91 +71,114 @@ export default function Register() {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <div className="auth-logo">✨</div>
-          <h1>Create Account</h1>
-          <p>Join us and get started today</p>
+    <div className="auth-screen auth-screen-register">
+      <aside className="auth-showcase">
+        <p className="showcase-kicker">Create Your Workspace</p>
+        <h1>Build an account and unlock the secure dashboard.</h1>
+        <p>
+          Register once and start managing your authenticated session with a
+          protected profile route.
+        </p>
+        <ul className="showcase-points">
+          {showcasePoints.map((point) => (
+            <li key={point}>{point}</li>
+          ))}
+        </ul>
+      </aside>
+
+      <section className="auth-panel">
+        <div className="auth-card">
+          <div className="auth-header">
+            <div className="auth-logo">AS</div>
+            <h2>Create account</h2>
+            <p>Use a valid email and a strong password.</p>
+          </div>
+
+          <form className="auth-form" onSubmit={handleSubmit}>
+            {error && <div className="error-message">{error}</div>}
+
+            <div className="form-group">
+              <label htmlFor="username">Username</label>
+              <input
+                id="username"
+                className="form-input"
+                type="text"
+                name="username"
+                placeholder="Choose a username"
+                value={formData.username}
+                onChange={handleChange}
+                required
+                autoComplete="username"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="email">Email Address</label>
+              <input
+                id="email"
+                className="form-input"
+                type="email"
+                name="email"
+                placeholder="you@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                autoComplete="email"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                className="form-input"
+                type="password"
+                name="password"
+                placeholder="At least 6 characters"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                autoComplete="new-password"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="confirmPassword">Confirm Password</label>
+              <input
+                id="confirmPassword"
+                className="form-input"
+                type="password"
+                name="confirmPassword"
+                placeholder="Repeat your password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+                autoComplete="new-password"
+              />
+            </div>
+
+            <button className="btn-submit" type="submit" disabled={loading}>
+              {loading ? (
+                <span className="btn-loading">
+                  <span className="spinner"></span>
+                  Creating account...
+                </span>
+              ) : (
+                'Create Account'
+              )}
+            </button>
+          </form>
+
+          <div className="auth-footer">
+            <p>
+              Already have an account?{' '}
+              <Link className="auth-link" to="/login">
+                Sign in
+              </Link>
+            </p>
+          </div>
         </div>
-
-        <form className="auth-form" onSubmit={handleSubmit}>
-          {error && <div className="error-message">{error}</div>}
-
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              id="username"
-              className="form-input"
-              type="text"
-              name="username"
-              placeholder="Choose a username"
-              value={formData.username}
-              onChange={handleChange}
-              required
-              autoComplete="username"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
-            <input
-              id="email"
-              className="form-input"
-              type="email"
-              name="email"
-              placeholder="you@example.com"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              autoComplete="email"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              className="form-input"
-              type="password"
-              name="password"
-              placeholder="At least 6 characters"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              autoComplete="new-password"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="confirmPassword">Confirm Password</label>
-            <input
-              id="confirmPassword"
-              className="form-input"
-              type="password"
-              name="confirmPassword"
-              placeholder="Repeat your password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-              autoComplete="new-password"
-            />
-          </div>
-
-          <button className="btn-submit" type="submit" disabled={loading}>
-            <span>{loading ? <span className="spinner"></span> : 'Create Account'}</span>
-          </button>
-        </form>
-
-        <div className="auth-footer">
-          <p>
-            Already have an account?{' '}
-            <Link className="auth-link" to="/login">
-              Sign in
-            </Link>
-          </p>
-        </div>
-      </div>
+      </section>
     </div>
   );
 }
