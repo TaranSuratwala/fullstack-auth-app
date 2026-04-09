@@ -101,7 +101,7 @@ export default function GoogleSignInButton({ onCredential, disabled }) {
             width,
           });
 
-          window.setTimeout(() => {
+          const waitForRenderedButton = (attempt = 0) => {
             if (!active || !buttonContainerRef.current) {
               return;
             }
@@ -110,21 +110,37 @@ export default function GoogleSignInButton({ onCredential, disabled }) {
               buttonContainerRef.current.querySelector('iframe, [role="button"], .nsm7Bb-HzV7m-LgbsSe')
             );
 
-            if (!hasRenderedButton) {
+            if (hasRenderedButton) {
+              setStatus({
+                loading: false,
+                enabled: true,
+                message: '',
+              });
+              return;
+            }
+
+            if (attempt >= 20) {
               setStatus({
                 loading: false,
                 enabled: false,
                 message: 'Google sign-in could not be displayed. Add this site origin in Google OAuth settings and disable script blockers.',
               });
+              return;
             }
-          }, 1200);
-        }
 
-        setStatus({
-          loading: false,
-          enabled: true,
-          message: '',
-        });
+            window.setTimeout(() => {
+              waitForRenderedButton(attempt + 1);
+            }, 250);
+          };
+
+          waitForRenderedButton();
+        } else {
+          setStatus({
+            loading: false,
+            enabled: false,
+            message: 'Google sign-in container was not found.',
+          });
+        }
       } catch (err) {
         if (active) {
           setStatus({
