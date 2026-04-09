@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 
 const showcasePoints = [
   'JWT protected sessions',
@@ -12,6 +13,7 @@ export default function Login() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -46,6 +48,33 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  const handleGoogleCredential = useCallback(async (credential) => {
+    setError('');
+    setGoogleLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Google sign-in failed');
+      }
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      navigate('/');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setGoogleLoading(false);
+    }
+  }, [navigate]);
 
   return (
     <div className="auth-screen auth-screen-login">
@@ -104,7 +133,7 @@ export default function Login() {
               />
             </div>
 
-            <button className="btn-submit" type="submit" disabled={loading}>
+            <button className="btn-submit" type="submit" disabled={loading || googleLoading}>
               {loading ? (
                 <span className="btn-loading">
                   <span className="spinner"></span>
@@ -115,6 +144,17 @@ export default function Login() {
               )}
             </button>
           </form>
+
+          <div className="auth-divider">
+            <span>or continue with</span>
+          </div>
+
+          <GoogleSignInButton
+            onCredential={handleGoogleCredential}
+            disabled={loading || googleLoading}
+          />
+
+          {googleLoading && <p className="oauth-note">Signing in with Google...</p>}
 
           <div className="auth-footer">
             <p>

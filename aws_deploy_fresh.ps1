@@ -85,6 +85,7 @@ DB_PORT=5432
 DB_NAME=auth_app
 DB_SSL=true
 JWT_SECRET=__JWT_SECRET__
+GOOGLE_CLIENT_ID=__GOOGLE_CLIENT_ID__
 PORT=5000
 EOFENV
 chown ubuntu:ubuntu /home/ubuntu/fullstack-auth-app/backend/.env
@@ -151,6 +152,15 @@ systemctl restart nginx
 $userData = $userDataTemplate.Replace('__DB_PASSWORD__', $state.dbPassword)
 $userData = $userData.Replace('__RDS_ENDPOINT__', $state.rdsEndpoint)
 $userData = $userData.Replace('__JWT_SECRET__', $state.jwtSecret)
+
+$googleClientId = ''
+if ($state.PSObject.Properties.Name -contains 'googleClientId' -and $state.googleClientId) {
+  $googleClientId = $state.googleClientId
+} elseif ($env:GOOGLE_CLIENT_ID) {
+  $googleClientId = $env:GOOGLE_CLIENT_ID
+}
+
+$userData = $userData.Replace('__GOOGLE_CLIENT_ID__', $googleClientId)
 $userData = $userData -replace "`r`n", "`n"
 
 $userDataPath = Join-Path $env:TEMP "$($state.prefix)-userdata.sh"
