@@ -138,7 +138,7 @@ export default function GoogleSignInButton({ onCredential, disabled }) {
           setStatus({
             loading: false,
             enabled: false,
-            message: 'Google sign-in container was not found.',
+            message: 'Unable to mount Google sign-in container.',
           });
         }
       } catch (err) {
@@ -159,17 +159,16 @@ export default function GoogleSignInButton({ onCredential, disabled }) {
     };
   }, [onCredential, disabled]);
 
-  if (status.loading) {
-    return <p className="oauth-note">Loading Google sign-in...</p>;
-  }
-
-  if (!status.enabled) {
+  if (!status.loading && !status.enabled) {
     return <p className="oauth-note oauth-note-warning">{status.message}</p>;
   }
 
   return (
-    <div className={`google-btn-wrap ${disabled ? 'google-btn-disabled' : ''}`}>
-      <div ref={buttonContainerRef} />
-    </div>
+    <>
+      <div className={`google-btn-wrap ${disabled ? 'google-btn-disabled' : ''}`}>
+        <div ref={buttonContainerRef} />
+      </div>
+      {status.loading && <p className="oauth-note">Loading Google sign-in...</p>}
+    </>
   );
 }
