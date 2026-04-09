@@ -8,10 +8,29 @@ const loadGoogleScript = () => new Promise((resolve, reject) => {
     return;
   }
 
+  const timeoutId = window.setTimeout(() => {
+    reject(new Error('Google script load timed out.'));
+  }, 12000);
+
+  const complete = () => {
+    window.clearTimeout(timeoutId);
+    resolve();
+  };
+
+  const fail = () => {
+    window.clearTimeout(timeoutId);
+    reject(new Error('Failed to load Google script.'));
+  };
+
   const existing = document.querySelector(`script[src="${GOOGLE_SCRIPT_SRC}"]`);
   if (existing) {
-    existing.addEventListener('load', () => resolve(), { once: true });
-    existing.addEventListener('error', () => reject(new Error('Failed to load Google script.')), { once: true });
+    existing.addEventListener('load', () => complete(), { once: true });
+    existing.addEventListener('error', () => fail(), { once: true });
+
+    if (window.google?.accounts?.id) {
+      complete();
+    }
+
     return;
   }
 
@@ -19,8 +38,8 @@ const loadGoogleScript = () => new Promise((resolve, reject) => {
   script.src = GOOGLE_SCRIPT_SRC;
   script.async = true;
   script.defer = true;
-  script.onload = () => resolve();
-  script.onerror = () => reject(new Error('Failed to load Google script.'));
+  script.onload = () => complete();
+  script.onerror = () => fail();
   document.head.appendChild(script);
 });
 
@@ -81,6 +100,24 @@ export default function GoogleSignInButton({ onCredential, disabled }) {
             size: 'large',
             width,
           });
+
+          window.setTimeout(() => {
+            if (!active || !buttonContainerRef.current) {
+              return;
+            }
+
+            const hasRenderedButton = Boolean(
+              buttonContainerRef.current.querySelector('iframe, [role="button"], .nsm7Bb-HzV7m-LgbsSe')
+            );
+
+            if (!hasRenderedButton) {
+              setStatus({
+                loading: false,
+                enabled: false,
+                message: 'Google sign-in could not be displayed. Add this site origin in Google OAuth settings and disable script blockers.',
+              });
+            }
+          }, 1200);
         }
 
         setStatus({
@@ -93,7 +130,7 @@ export default function GoogleSignInButton({ onCredential, disabled }) {
           setStatus({
             loading: false,
             enabled: false,
-            message: 'Unable to load Google sign-in right now.',
+            message: 'Unable to load Google sign-in right now. Verify Authorized JavaScript origins and browser blockers.',
           });
         }
       }
