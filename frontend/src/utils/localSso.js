@@ -1,5 +1,6 @@
 const LOCAL_SSO_KEY = 'authvault.localSso';
 const LOCAL_SSO_MODE_KEY = 'authvault.localSsoMode';
+const LOCAL_SSO_TRUSTED_KEY = 'authvault.localSsoTrusted';
 
 const safeParseJson = (rawValue) => {
   try {
@@ -37,7 +38,12 @@ const isExpired = (expiresAt) => {
   return Date.now() >= expiresAt;
 };
 
-export const saveLocalSsoSession = ({ token, user }) => {
+export const saveLocalSsoSession = ({ token, user, persist = true }) => {
+  if (!persist) {
+    clearLocalSsoSession();
+    return;
+  }
+
   if (!token || !user) {
     return;
   }
@@ -80,6 +86,14 @@ export const getLocalSsoSession = () => {
 export const clearLocalSsoSession = () => {
   localStorage.removeItem(LOCAL_SSO_KEY);
   sessionStorage.removeItem(LOCAL_SSO_MODE_KEY);
+};
+
+export const getLocalSsoTrustedPreference = () => {
+  return localStorage.getItem(LOCAL_SSO_TRUSTED_KEY) === '1';
+};
+
+export const setLocalSsoTrustedPreference = (value) => {
+  localStorage.setItem(LOCAL_SSO_TRUSTED_KEY, value ? '1' : '0');
 };
 
 export const markLocalSsoSignIn = () => {

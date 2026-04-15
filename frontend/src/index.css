@@ -339,6 +339,25 @@ body::after {
   gap: 0.45rem;
 }
 
+.trust-toggle {
+  margin-top: -0.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.86rem;
+  color: var(--text-muted);
+}
+
+.trust-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--brand-primary);
+}
+
+.trust-toggle span {
+  user-select: none;
+}
+
 .form-group label {
   font-size: 0.84rem;
   font-weight: 600;

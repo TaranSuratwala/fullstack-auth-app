@@ -1,7 +1,11 @@
 import { useCallback, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import GoogleSignInButton from '../components/GoogleSignInButton';
-import { saveLocalSsoSession } from '../utils/localSso';
+import {
+  getLocalSsoTrustedPreference,
+  saveLocalSsoSession,
+  setLocalSsoTrustedPreference,
+} from '../utils/localSso';
 
 const showcasePoints = [
   'Create a secure profile in seconds',
@@ -20,10 +24,17 @@ export default function Register() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [trustedDevice, setTrustedDevice] = useState(getLocalSsoTrustedPreference());
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
+  };
+
+  const handleTrustedDeviceChange = (e) => {
+    const checked = e.target.checked;
+    setTrustedDevice(checked);
+    setLocalSsoTrustedPreference(checked);
   };
 
   const handleSubmit = async (e) => {
@@ -65,7 +76,11 @@ export default function Register() {
       // Store token and user info
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      saveLocalSsoSession({ token: data.token, user: data.user });
+      saveLocalSsoSession({
+        token: data.token,
+        user: data.user,
+        persist: trustedDevice,
+      });
       navigate('/');
     } catch (err) {
       setError(err.message);
@@ -93,14 +108,18 @@ export default function Register() {
 
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      saveLocalSsoSession({ token: data.token, user: data.user });
+      saveLocalSsoSession({
+        token: data.token,
+        user: data.user,
+        persist: trustedDevice,
+      });
       navigate('/');
     } catch (err) {
       setError(err.message);
     } finally {
       setGoogleLoading(false);
     }
-  }, [navigate]);
+  }, [navigate, trustedDevice]);
 
   return (
     <div className="auth-screen auth-screen-register">
@@ -188,6 +207,15 @@ export default function Register() {
                 autoComplete="new-password"
               />
             </div>
+
+            <label className="trust-toggle">
+              <input
+                type="checkbox"
+                checked={trustedDevice}
+                onChange={handleTrustedDeviceChange}
+              />
+              <span>Keep this device trusted for Local SSO</span>
+            </label>
 
             <button className="btn-submit" type="submit" disabled={loading || googleLoading}>
               {loading ? (

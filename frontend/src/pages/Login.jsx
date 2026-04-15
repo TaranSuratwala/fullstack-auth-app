@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import {
   getLocalSsoSession,
+  getLocalSsoTrustedPreference,
   markLocalSsoSignIn,
   saveLocalSsoSession,
+  setLocalSsoTrustedPreference,
 } from '../utils/localSso';
 
 const showcasePoints = [
@@ -20,21 +22,32 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [localSsoSession, setLocalSsoSession] = useState(null);
+  const [trustedDevice, setTrustedDevice] = useState(getLocalSsoTrustedPreference());
 
   useEffect(() => {
     setLocalSsoSession(getLocalSsoSession());
   }, []);
 
-  const completeLogin = useCallback((data) => {
+  const completeLogin = useCallback((data, persistLocalSso) => {
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
-    saveLocalSsoSession({ token: data.token, user: data.user });
+    saveLocalSsoSession({
+      token: data.token,
+      user: data.user,
+      persist: persistLocalSso,
+    });
     navigate('/');
   }, [navigate]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
+  };
+
+  const handleTrustedDeviceChange = (e) => {
+    const checked = e.target.checked;
+    setTrustedDevice(checked);
+    setLocalSsoTrustedPreference(checked);
   };
 
   const handleLocalSsoSignIn = () => {
@@ -72,7 +85,7 @@ export default function Login() {
         throw new Error(data.message || 'Login failed');
       }
 
-      completeLogin(data);
+      completeLogin(data, trustedDevice);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -97,13 +110,13 @@ export default function Login() {
         throw new Error(data.message || 'Google sign-in failed');
       }
 
-      completeLogin(data);
+      completeLogin(data, trustedDevice);
     } catch (err) {
       setError(err.message);
     } finally {
       setGoogleLoading(false);
     }
-  }, [completeLogin]);
+  }, [completeLogin, trustedDevice]);
 
   return (
     <div className="auth-screen auth-screen-login">
@@ -178,6 +191,15 @@ export default function Login() {
                 autoComplete="current-password"
               />
             </div>
+
+            <label className="trust-toggle">
+              <input
+                type="checkbox"
+                checked={trustedDevice}
+                onChange={handleTrustedDeviceChange}
+              />
+              <span>Keep this device trusted for Local SSO</span>
+            </label>
 
             <button className="btn-submit" type="submit" disabled={loading || googleLoading}>
               {loading ? (
