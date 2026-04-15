@@ -115,6 +115,25 @@ Environment=NODE_ENV=production
 WantedBy=multi-user.target
 EOFSVC
 
+cat > /etc/systemd/system/authvault-backend@.service <<'EOFSVCTPL'
+[Unit]
+Description=AuthVault Backend Service on port %i
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/fullstack-auth-app/backend
+Environment=PORT=%i
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node /home/ubuntu/fullstack-auth-app/backend/server.js
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOFSVCTPL
+
 cat > /etc/nginx/sites-available/authvault <<'EOFNGINX'
 server {
     listen 80 default_server;
@@ -136,6 +155,27 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
+
+  server {
+    listen 8080 default_server;
+    server_name _;
+
+    root /var/www/authvault;
+    index index.html;
+
+    location / {
+      try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+      proxy_pass http://127.0.0.1:5001;
+      proxy_http_version 1.1;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+    }
+  }
 EOFNGINX
 
 rm -f /etc/nginx/sites-enabled/*
@@ -145,6 +185,8 @@ nginx -t
 systemctl daemon-reload
 systemctl enable authvault-backend
 systemctl restart authvault-backend
+systemctl enable authvault-backend@5001
+systemctl restart authvault-backend@5001
 systemctl enable nginx
 systemctl restart nginx
 '@
