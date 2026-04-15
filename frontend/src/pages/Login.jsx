@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import GoogleSignInButton from '../components/GoogleSignInButton';
-import { getLocalSsoSession, saveLocalSsoSession } from '../utils/localSso';
+import {
+  getLocalSsoSession,
+  markLocalSsoSignIn,
+  saveLocalSsoSession,
+} from '../utils/localSso';
 
 const showcasePoints = [
   'JWT protected sessions',
@@ -46,6 +50,7 @@ export default function Login() {
 
     localStorage.setItem('token', session.token);
     localStorage.setItem('user', JSON.stringify(session.user));
+    markLocalSsoSignIn();
     navigate('/');
   };
 

@@ -1,4 +1,5 @@
 const LOCAL_SSO_KEY = 'authvault.localSso';
+const LOCAL_SSO_MODE_KEY = 'authvault.localSsoMode';
 
 const safeParseJson = (rawValue) => {
   try {
@@ -78,4 +79,15 @@ export const getLocalSsoSession = () => {
 
 export const clearLocalSsoSession = () => {
   localStorage.removeItem(LOCAL_SSO_KEY);
+  sessionStorage.removeItem(LOCAL_SSO_MODE_KEY);
+};
+
+export const markLocalSsoSignIn = () => {
+  sessionStorage.setItem(LOCAL_SSO_MODE_KEY, '1');
+};
+
+export const consumeLocalSsoSignIn = () => {
+  const isLocalSso = sessionStorage.getItem(LOCAL_SSO_MODE_KEY) === '1';
+  sessionStorage.removeItem(LOCAL_SSO_MODE_KEY);
+  return isLocalSso;
 };

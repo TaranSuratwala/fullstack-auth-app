@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { clearLocalSsoSession } from '../utils/localSso';
+import { clearLocalSsoSession, consumeLocalSsoSignIn } from '../utils/localSso';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -10,10 +10,25 @@ export default function Home() {
   useEffect(() => {
     const fetchProfile = async () => {
       const token = localStorage.getItem('token');
+      const localUserRaw = localStorage.getItem('user');
+      const usedLocalSso = consumeLocalSsoSignIn();
 
       if (!token) {
         navigate('/login');
         return;
+      }
+
+      if (usedLocalSso && localUserRaw) {
+        try {
+          const localUser = JSON.parse(localUserRaw);
+          if (localUser && localUser.username && localUser.email) {
+            setUser(localUser);
+            setLoading(false);
+            return;
+          }
+        } catch {
+          // If local user payload is malformed, fallback to normal API profile fetch.
+        }
       }
 
       try {
