@@ -1,6 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 
 const GOOGLE_SCRIPT_SRC = 'https://accounts.google.com/gsi/client';
+let googleCredentialListener = null;
+let initializedGoogleClientId = null;
+
+const setGoogleCredentialListener = (listener) => {
+  googleCredentialListener = listener;
+};
+
+const forwardGoogleCredential = (response) => {
+  if (typeof googleCredentialListener === 'function') {
+    googleCredentialListener(response);
+  }
+};
 
 const loadGoogleScript = () => new Promise((resolve, reject) => {
   if (window.google?.accounts?.id) {
@@ -43,13 +55,58 @@ const loadGoogleScript = () => new Promise((resolve, reject) => {
   document.head.appendChild(script);
 });
 
+const ensureGoogleInitialized = (clientId) => {
+  if (!window.google?.accounts?.id) {
+    throw new Error('Google Identity Services SDK is unavailable.');
+  }
+
+  if (initializedGoogleClientId === clientId) {
+    return;
+  }
+
+  window.google.accounts.id.initialize({
+    client_id: clientId,
+    callback: (response) => {
+      forwardGoogleCredential(response);
+    },
+  });
+
+  initializedGoogleClientId = clientId;
+};
+
 export default function GoogleSignInButton({ onCredential, disabled }) {
   const buttonContainerRef = useRef(null);
+  const onCredentialRef = useRef(onCredential);
+  const disabledRef = useRef(disabled);
   const [status, setStatus] = useState({
     loading: true,
     enabled: false,
     message: '',
   });
+
+  useEffect(() => {
+    onCredentialRef.current = onCredential;
+  }, [onCredential]);
+
+  useEffect(() => {
+    disabledRef.current = disabled;
+  }, [disabled]);
+
+  useEffect(() => {
+    setGoogleCredentialListener((response) => {
+      if (disabledRef.current) {
+        return;
+      }
+
+      if (response?.credential) {
+        onCredentialRef.current(response.credential);
+      }
+    });
+
+    return () => {
+      setGoogleCredentialListener(null);
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -76,17 +133,7 @@ export default function GoogleSignInButton({ onCredential, disabled }) {
           return;
         }
 
-        window.google.accounts.id.initialize({
-          client_id: config.clientId,
-          callback: (response) => {
-            if (!active || disabled) {
-              return;
-            }
-            if (response?.credential) {
-              onCredential(response.credential);
-            }
-          },
-        });
+        ensureGoogleInitialized(config.clientId);
 
         if (buttonContainerRef.current) {
           buttonContainerRef.current.innerHTML = '';
@@ -157,7 +204,7 @@ export default function GoogleSignInButton({ onCredential, disabled }) {
     return () => {
       active = false;
     };
-  }, [onCredential, disabled]);
+  }, []);
 
   if (!status.loading && !status.enabled) {
     return <p className="oauth-note oauth-note-warning">{status.message}</p>;
