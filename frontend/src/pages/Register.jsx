@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import { saveLocalSsoSession } from '../utils/localSso';
 
 const showcasePoints = [
   'Create a secure profile in seconds',
@@ -64,6 +65,7 @@ export default function Register() {
       // Store token and user info
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
+      saveLocalSsoSession({ token: data.token, user: data.user });
       navigate('/');
     } catch (err) {
       setError(err.message);
@@ -91,6 +93,7 @@ export default function Register() {
 
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
+      saveLocalSsoSession({ token: data.token, user: data.user });
       navigate('/');
     } catch (err) {
       setError(err.message);

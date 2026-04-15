@@ -1,6 +1,7 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import { getLocalSsoSession, saveLocalSsoSession } from '../utils/localSso';
 
 const showcasePoints = [
   'JWT protected sessions',
@@ -14,10 +15,38 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [localSsoSession, setLocalSsoSession] = useState(null);
+
+  useEffect(() => {
+    setLocalSsoSession(getLocalSsoSession());
+  }, []);
+
+  const completeLogin = useCallback((data) => {
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    saveLocalSsoSession({ token: data.token, user: data.user });
+    navigate('/');
+  }, [navigate]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
+  };
+
+  const handleLocalSsoSignIn = () => {
+    setError('');
+
+    const session = getLocalSsoSession();
+
+    if (!session) {
+      setLocalSsoSession(null);
+      setError('No active local SSO session found. Sign in again to create one.');
+      return;
+    }
+
+    localStorage.setItem('token', session.token);
+    localStorage.setItem('user', JSON.stringify(session.user));
+    navigate('/');
   };
 
   const handleSubmit = async (e) => {
@@ -38,10 +67,7 @@ export default function Login() {
         throw new Error(data.message || 'Login failed');
       }
 
-      // Store token and user info
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      navigate('/');
+      completeLogin(data);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -66,15 +92,13 @@ export default function Login() {
         throw new Error(data.message || 'Google sign-in failed');
       }
 
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      navigate('/');
+      completeLogin(data);
     } catch (err) {
       setError(err.message);
     } finally {
       setGoogleLoading(false);
     }
-  }, [navigate]);
+  }, [completeLogin]);
 
   return (
     <div className="auth-screen auth-screen-login">
@@ -99,6 +123,23 @@ export default function Login() {
             <h2>Sign in</h2>
             <p>Use your email and password to continue.</p>
           </div>
+
+          {localSsoSession && (
+            <div className="local-sso-card">
+              <p className="local-sso-title">AuthVault SSO (no API call)</p>
+              <p className="local-sso-subtitle">
+                Continue with your saved browser session.
+              </p>
+              <button
+                className="btn-local-sso"
+                type="button"
+                onClick={handleLocalSsoSignIn}
+                disabled={loading || googleLoading}
+              >
+                Continue as {localSsoSession.user.username}
+              </button>
+            </div>
+          )}
 
           <form className="auth-form" onSubmit={handleSubmit}>
             {error && <div className="error-message">{error}</div>}

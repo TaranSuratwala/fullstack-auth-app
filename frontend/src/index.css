@@ -229,6 +229,53 @@ body::after {
   gap: 1rem;
 }
 
+.local-sso-card {
+  margin-bottom: 1rem;
+  border: 1px solid rgba(15, 118, 110, 0.24);
+  background: rgba(15, 118, 110, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem;
+}
+
+.local-sso-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #0f5f59;
+}
+
+.local-sso-subtitle {
+  margin-top: 0.35rem;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.btn-local-sso {
+  margin-top: 0.65rem;
+  width: 100%;
+  border: 1px solid rgba(15, 118, 110, 0.3);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(125deg, rgba(15, 118, 110, 0.15), rgba(2, 132, 199, 0.12));
+  color: #0e5b56;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 0.72rem 0.85rem;
+  cursor: pointer;
+  transition: transform var(--transition-base), background var(--transition-base);
+}
+
+.btn-local-sso:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(125deg, rgba(15, 118, 110, 0.2), rgba(2, 132, 199, 0.16));
+}
+
+.btn-local-sso:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .auth-divider {
   margin-top: 1.1rem;
   margin-bottom: 0.6rem;

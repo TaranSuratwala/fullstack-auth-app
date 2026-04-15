@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { clearLocalSsoSession } from '../utils/localSso';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ export default function Home() {
       } catch {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        clearLocalSsoSession();
         navigate('/login');
       } finally {
         setLoading(false);
@@ -41,6 +43,7 @@ export default function Home() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    clearLocalSsoSession();
     navigate('/login');
   };
 
