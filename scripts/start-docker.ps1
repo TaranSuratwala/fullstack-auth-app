@@ -1,7 +1,8 @@
 param(
   [switch]$Rebuild,
   [switch]$FollowLogs,
-  [switch]$CheckHealth
+  [switch]$CheckHealth,
+  [int]$AppPort
 )
 
 $ErrorActionPreference = 'Stop'
@@ -10,6 +11,35 @@ function Fail {
   param([string]$Message)
   Write-Error $Message
   exit 1
+}
+
+function Get-EnvValue {
+  param(
+    [string]$FilePath,
+    [string]$Key
+  )
+
+  if (-not (Test-Path $FilePath)) {
+    return $null
+  }
+
+  foreach ($line in Get-Content $FilePath) {
+    $trimmed = $line.Trim()
+    if (-not $trimmed -or $trimmed.StartsWith('#')) {
+      continue
+    }
+
+    $parts = $trimmed -split '=', 2
+    if ($parts.Count -ne 2) {
+      continue
+    }
+
+    if ($parts[0].Trim() -eq $Key) {
+      return $parts[1].Trim()
+    }
+  }
+
+  return $null
 }
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -35,6 +65,18 @@ if (-not (Test-Path '.env')) {
   Write-Host 'Created .env from docker.env.example. Update JWT_SECRET before sharing.'
 }
 
+if ($AppPort -gt 0) {
+  $env:APP_PORT = [string]$AppPort
+}
+
+$effectiveAppPort = $env:APP_PORT
+if (-not $effectiveAppPort) {
+  $effectiveAppPort = Get-EnvValue -FilePath '.env' -Key 'APP_PORT'
+}
+if (-not $effectiveAppPort) {
+  $effectiveAppPort = '8080'
+}
+
 $composeArgs = @('compose', 'up', '-d')
 if ($Rebuild) {
   $composeArgs = @('compose', 'up', '--build', '-d')
@@ -49,11 +91,15 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host ''
 Write-Host 'AuthVault is running:'
-Write-Host '  App:    http://localhost:8080'
-Write-Host '  Health: http://localhost:8080/api/health'
+Write-Host "  App:    http://localhost:$effectiveAppPort"
+Write-Host "  Health: http://localhost:$effectiveAppPort/api/health"
 
 if ($CheckHealth) {
-  & (Join-Path $scriptDir 'check-docker-health.ps1')
+  $healthParams = @{}
+  if ($AppPort -gt 0) {
+    $healthParams.AppPort = $AppPort
+  }
+  & (Join-Path $scriptDir 'check-docker-health.ps1') @healthParams
 }
 
 if ($FollowLogs) {
