@@ -4,6 +4,7 @@ set -euo pipefail
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-90}"
 POLL_SECONDS="${POLL_SECONDS:-3}"
 PORT_ARG=""
+PORT_SECOND_ARG=""
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -19,9 +20,17 @@ while [[ $# -gt 0 ]]; do
       PORT_ARG="$2"
       shift 2
       ;;
+    --port-secondary)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --port-secondary" >&2
+        exit 1
+      fi
+      PORT_SECOND_ARG="$2"
+      shift 2
+      ;;
     *)
       echo "Unknown option: $1" >&2
-      echo "Supported options: --port <host-port>" >&2
+      echo "Supported options: --port <host-port> --port-secondary <host-port>" >&2
       exit 1
       ;;
   esac
@@ -29,6 +38,10 @@ done
 
 if [[ -n "$PORT_ARG" ]]; then
   export APP_PORT="$PORT_ARG"
+fi
+
+if [[ -n "$PORT_SECOND_ARG" ]]; then
+  export APP_PORT_SECOND="$PORT_SECOND_ARG"
 fi
 
 resolve_app_port() {
@@ -50,6 +63,26 @@ resolve_app_port() {
 }
 
 APP_PORT_EFFECTIVE="$(resolve_app_port)"
+
+resolve_app_port_second() {
+  if [[ -n "${APP_PORT_SECOND:-}" ]]; then
+    echo "$APP_PORT_SECOND"
+    return
+  fi
+
+  if [[ -f .env ]]; then
+    local env_value
+    env_value="$(grep -E '^[[:space:]]*APP_PORT_SECOND=' .env | tail -n 1 | cut -d '=' -f 2- | tr -d '\r')"
+    if [[ -n "$env_value" ]]; then
+      echo "$env_value"
+      return
+    fi
+  fi
+
+  echo "8081"
+}
+
+APP_PORT_SECOND_EFFECTIVE="$(resolve_app_port_second)"
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "Docker CLI not found. Install Docker Desktop (or Docker Engine + Compose) and retry." >&2
@@ -95,7 +128,15 @@ wait_until \
   "AuthVault HTTP health endpoint responds" \
   "curl -fsS http://localhost:${APP_PORT_EFFECTIVE}/api/health >/dev/null"
 
+if [[ "$APP_PORT_SECOND_EFFECTIVE" != "$APP_PORT_EFFECTIVE" ]]; then
+  wait_until \
+    "AuthVault second-port health endpoint responds" \
+    "curl -fsS http://localhost:${APP_PORT_SECOND_EFFECTIVE}/api/health >/dev/null"
+fi
+
 echo ""
 echo "Docker stack health check passed."
 echo "  App:    http://localhost:${APP_PORT_EFFECTIVE}"
 echo "  Health: http://localhost:${APP_PORT_EFFECTIVE}/api/health"
+echo "  App 2:  http://localhost:${APP_PORT_SECOND_EFFECTIVE}"
+echo "  Health: http://localhost:${APP_PORT_SECOND_EFFECTIVE}/api/health"

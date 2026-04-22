@@ -2,7 +2,8 @@ param(
   [switch]$Rebuild,
   [switch]$FollowLogs,
   [switch]$CheckHealth,
-  [int]$AppPort
+  [int]$AppPort,
+  [int]$AppPortSecond
 )
 
 $ErrorActionPreference = 'Stop'
@@ -69,12 +70,37 @@ if ($AppPort -gt 0) {
   $env:APP_PORT = [string]$AppPort
 }
 
+if ($AppPortSecond -gt 0) {
+  $env:APP_PORT_SECOND = [string]$AppPortSecond
+}
+
 $effectiveAppPort = $env:APP_PORT
 if (-not $effectiveAppPort) {
   $effectiveAppPort = Get-EnvValue -FilePath '.env' -Key 'APP_PORT'
 }
 if (-not $effectiveAppPort) {
   $effectiveAppPort = '8080'
+}
+
+$effectiveAppPortSecond = $env:APP_PORT_SECOND
+if (-not $effectiveAppPortSecond) {
+  $effectiveAppPortSecond = Get-EnvValue -FilePath '.env' -Key 'APP_PORT_SECOND'
+}
+if (-not $effectiveAppPortSecond) {
+  $effectiveAppPortSecond = '8081'
+}
+
+if ($effectiveAppPort -eq $effectiveAppPortSecond) {
+  Fail "APP_PORT and APP_PORT_SECOND must be different. Current value: $effectiveAppPort"
+}
+
+$effectiveGoogleClientId = $env:GOOGLE_CLIENT_ID
+if (-not $effectiveGoogleClientId) {
+  $effectiveGoogleClientId = Get-EnvValue -FilePath '.env' -Key 'GOOGLE_CLIENT_ID'
+}
+
+if ([string]::IsNullOrWhiteSpace($effectiveGoogleClientId)) {
+  Write-Warning 'GOOGLE_CLIENT_ID is empty. Google OAuth will show as not configured.'
 }
 
 $composeArgs = @('compose', 'up', '-d')
@@ -93,12 +119,13 @@ Write-Host ''
 Write-Host 'AuthVault is running:'
 Write-Host "  App:    http://localhost:$effectiveAppPort"
 Write-Host "  Health: http://localhost:$effectiveAppPort/api/health"
+Write-Host "  App 2:  http://localhost:$effectiveAppPortSecond"
+Write-Host "  Health: http://localhost:$effectiveAppPortSecond/api/health"
 
 if ($CheckHealth) {
   $healthParams = @{}
-  if ($AppPort -gt 0) {
-    $healthParams.AppPort = $AppPort
-  }
+  $healthParams.AppPort = [int]$effectiveAppPort
+  $healthParams.AppPortSecond = [int]$effectiveAppPortSecond
   & (Join-Path $scriptDir 'check-docker-health.ps1') @healthParams
 }
 

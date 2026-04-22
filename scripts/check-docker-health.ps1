@@ -1,7 +1,8 @@
 param(
   [int]$TimeoutSeconds = 90,
   [int]$PollSeconds = 3,
-  [int]$AppPort
+  [int]$AppPort,
+  [int]$AppPortSecond
 )
 
 $ErrorActionPreference = 'Stop'
@@ -83,6 +84,10 @@ if ($AppPort -gt 0) {
   $env:APP_PORT = [string]$AppPort
 }
 
+if ($AppPortSecond -gt 0) {
+  $env:APP_PORT_SECOND = [string]$AppPortSecond
+}
+
 $effectiveAppPort = $env:APP_PORT
 if (-not $effectiveAppPort) {
   $effectiveAppPort = Get-EnvValue -FilePath '.env' -Key 'APP_PORT'
@@ -91,7 +96,16 @@ if (-not $effectiveAppPort) {
   $effectiveAppPort = '8080'
 }
 
+$effectiveAppPortSecond = $env:APP_PORT_SECOND
+if (-not $effectiveAppPortSecond) {
+  $effectiveAppPortSecond = Get-EnvValue -FilePath '.env' -Key 'APP_PORT_SECOND'
+}
+if (-not $effectiveAppPortSecond) {
+  $effectiveAppPortSecond = '8081'
+}
+
 $healthUrl = "http://localhost:$effectiveAppPort/api/health"
+$healthUrlSecond = "http://localhost:$effectiveAppPortSecond/api/health"
 
 Wait-Until -Description 'authvault-db container running' -Timeout $TimeoutSeconds -Poll $PollSeconds -Condition {
   $running = (& docker inspect -f '{{.State.Running}}' authvault-db 2>$null).Trim()
@@ -113,7 +127,16 @@ Wait-Until -Description 'AuthVault HTTP health endpoint responds' -Timeout $Time
   return $res.StatusCode -eq 200
 }
 
+if ($effectiveAppPortSecond -ne $effectiveAppPort) {
+  Wait-Until -Description 'AuthVault second-port health endpoint responds' -Timeout $TimeoutSeconds -Poll $PollSeconds -Condition {
+    $res = Invoke-WebRequest -Uri $healthUrlSecond -UseBasicParsing -TimeoutSec 10
+    return $res.StatusCode -eq 200
+  }
+}
+
 Write-Host ''
 Write-Host 'Docker stack health check passed.'
 Write-Host "  App:    http://localhost:$effectiveAppPort"
 Write-Host "  Health: $healthUrl"
+Write-Host "  App 2:  http://localhost:$effectiveAppPortSecond"
+Write-Host "  Health: $healthUrlSecond"

@@ -18,6 +18,7 @@ fi
 REBUILD=false
 CHECK_HEALTH=false
 PORT_ARG=""
+PORT_SECOND_ARG=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -37,9 +38,17 @@ while [[ $# -gt 0 ]]; do
       PORT_ARG="$2"
       shift 2
       ;;
+    --port-secondary)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --port-secondary" >&2
+        exit 1
+      fi
+      PORT_SECOND_ARG="$2"
+      shift 2
+      ;;
     *)
       echo "Unknown option: $1" >&2
-      echo "Supported options: --build --check-health --port <host-port>" >&2
+      echo "Supported options: --build --check-health --port <host-port> --port-secondary <host-port>" >&2
       exit 1
       ;;
   esac
@@ -47,6 +56,10 @@ done
 
 if [[ -n "$PORT_ARG" ]]; then
   export APP_PORT="$PORT_ARG"
+fi
+
+if [[ -n "$PORT_SECOND_ARG" ]]; then
+  export APP_PORT_SECOND="$PORT_SECOND_ARG"
 fi
 
 resolve_app_port() {
@@ -69,6 +82,31 @@ resolve_app_port() {
 
 APP_PORT_EFFECTIVE="$(resolve_app_port)"
 
+resolve_app_port_second() {
+  if [[ -n "${APP_PORT_SECOND:-}" ]]; then
+    echo "$APP_PORT_SECOND"
+    return
+  fi
+
+  if [[ -f .env ]]; then
+    local env_value
+    env_value="$(grep -E '^[[:space:]]*APP_PORT_SECOND=' .env | tail -n 1 | cut -d '=' -f 2- | tr -d '\r')"
+    if [[ -n "$env_value" ]]; then
+      echo "$env_value"
+      return
+    fi
+  fi
+
+  echo "8081"
+}
+
+APP_PORT_SECOND_EFFECTIVE="$(resolve_app_port_second)"
+
+if [[ "$APP_PORT_EFFECTIVE" == "$APP_PORT_SECOND_EFFECTIVE" ]]; then
+  echo "APP_PORT and APP_PORT_SECOND must be different. Current value: $APP_PORT_EFFECTIVE" >&2
+  exit 1
+fi
+
 if [[ ! -f .env ]]; then
   if [[ ! -f docker.env.example ]]; then
     echo "Missing docker.env.example. Cannot auto-create .env file." >&2
@@ -76,6 +114,15 @@ if [[ ! -f .env ]]; then
   fi
   cp docker.env.example .env
   echo "Created .env from docker.env.example. Update JWT_SECRET before sharing."
+fi
+
+GOOGLE_CLIENT_VALUE="${GOOGLE_CLIENT_ID:-}"
+if [[ -z "$GOOGLE_CLIENT_VALUE" && -f .env ]]; then
+  GOOGLE_CLIENT_VALUE="$(grep -E '^[[:space:]]*GOOGLE_CLIENT_ID=' .env | tail -n 1 | cut -d '=' -f 2- | tr -d '\r')"
+fi
+
+if [[ -z "$GOOGLE_CLIENT_VALUE" ]]; then
+  echo "WARNING: GOOGLE_CLIENT_ID is empty. Google OAuth will show as not configured." >&2
 fi
 
 if [[ "$REBUILD" == "true" ]]; then
@@ -88,11 +135,9 @@ echo ""
 echo "AuthVault is running:"
 echo "  App:    http://localhost:${APP_PORT_EFFECTIVE}"
 echo "  Health: http://localhost:${APP_PORT_EFFECTIVE}/api/health"
+echo "  App 2:  http://localhost:${APP_PORT_SECOND_EFFECTIVE}"
+echo "  Health: http://localhost:${APP_PORT_SECOND_EFFECTIVE}/api/health"
 
 if [[ "$CHECK_HEALTH" == "true" ]]; then
-  if [[ -n "$PORT_ARG" ]]; then
-    "$SCRIPT_DIR/check-docker-health.sh" --port "$PORT_ARG"
-  else
-    "$SCRIPT_DIR/check-docker-health.sh"
-  fi
+  "$SCRIPT_DIR/check-docker-health.sh" --port "$APP_PORT_EFFECTIVE" --port-secondary "$APP_PORT_SECOND_EFFECTIVE"
 fi
