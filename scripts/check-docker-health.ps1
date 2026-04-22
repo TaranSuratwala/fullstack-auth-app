@@ -1,6 +1,7 @@
 param(
   [int]$TimeoutSeconds = 90,
-  [int]$PollSeconds = 3
+  [int]$PollSeconds = 3,
+  [int]$AppPort
 )
 
 $ErrorActionPreference = 'Stop'
@@ -9,6 +10,35 @@ function Fail {
   param([string]$Message)
   Write-Error $Message
   exit 1
+}
+
+function Get-EnvValue {
+  param(
+    [string]$FilePath,
+    [string]$Key
+  )
+
+  if (-not (Test-Path $FilePath)) {
+    return $null
+  }
+
+  foreach ($line in Get-Content $FilePath) {
+    $trimmed = $line.Trim()
+    if (-not $trimmed -or $trimmed.StartsWith('#')) {
+      continue
+    }
+
+    $parts = $trimmed -split '=', 2
+    if ($parts.Count -ne 2) {
+      continue
+    }
+
+    if ($parts[0].Trim() -eq $Key) {
+      return $parts[1].Trim()
+    }
+  }
+
+  return $null
 }
 
 function Wait-Until {
@@ -49,6 +79,20 @@ try {
   Fail 'Docker engine is not running. Start Docker Desktop and retry.'
 }
 
+if ($AppPort -gt 0) {
+  $env:APP_PORT = [string]$AppPort
+}
+
+$effectiveAppPort = $env:APP_PORT
+if (-not $effectiveAppPort) {
+  $effectiveAppPort = Get-EnvValue -FilePath '.env' -Key 'APP_PORT'
+}
+if (-not $effectiveAppPort) {
+  $effectiveAppPort = '8080'
+}
+
+$healthUrl = "http://localhost:$effectiveAppPort/api/health"
+
 Wait-Until -Description 'authvault-db container running' -Timeout $TimeoutSeconds -Poll $PollSeconds -Condition {
   $running = (& docker inspect -f '{{.State.Running}}' authvault-db 2>$null).Trim()
   return $running -eq 'true'
@@ -65,11 +109,11 @@ Wait-Until -Description 'PostgreSQL health is healthy' -Timeout $TimeoutSeconds 
 }
 
 Wait-Until -Description 'AuthVault HTTP health endpoint responds' -Timeout $TimeoutSeconds -Poll $PollSeconds -Condition {
-  $res = Invoke-WebRequest -Uri 'http://localhost:8080/api/health' -UseBasicParsing -TimeoutSec 10
+  $res = Invoke-WebRequest -Uri $healthUrl -UseBasicParsing -TimeoutSec 10
   return $res.StatusCode -eq 200
 }
 
 Write-Host ''
 Write-Host 'Docker stack health check passed.'
-Write-Host '  App:    http://localhost:8080'
-Write-Host '  Health: http://localhost:8080/api/health'
+Write-Host "  App:    http://localhost:$effectiveAppPort"
+Write-Host "  Health: $healthUrl"

@@ -24,6 +24,8 @@ cp docker.env.example .env
 
 At minimum, set a strong `JWT_SECRET` in `.env`.
 
+To run on a different host port, set `APP_PORT` in `.env` (example: `APP_PORT=8090`).
+
 ## 3) Build and run
 
 ### Option A: One-command helper scripts (recommended)
@@ -32,6 +34,12 @@ Windows PowerShell:
 
 ```powershell
 ./scripts/start-docker.ps1 -Rebuild -CheckHealth
+```
+
+Custom port example (PowerShell):
+
+```powershell
+./scripts/start-docker.ps1 -Rebuild -CheckHealth -AppPort 8090
 ```
 
 Windows double-click:
@@ -45,6 +53,12 @@ chmod +x scripts/*.sh
 ./scripts/start-docker.sh --build --check-health
 ```
 
+Custom port example (Linux/macOS):
+
+```bash
+./scripts/start-docker.sh --build --check-health --port 8090
+```
+
 ### Option B: Docker Compose directly
 
 ```bash
@@ -53,8 +67,8 @@ docker compose up --build -d
 
 ## 4) Access the app
 
-- App: http://localhost:8080
-- Health endpoint: http://localhost:8080/api/health
+- App: http://localhost:<APP_PORT>
+- Health endpoint: http://localhost:<APP_PORT>/api/health
 
 ## 5) Validate stack health
 
@@ -116,6 +130,6 @@ PowerShell equivalent:
 
 If you want Google OAuth to work in your colleague environments, add the local origin in Google Cloud OAuth settings:
 
-- `http://localhost:8080`
+- `http://localhost:<APP_PORT>` (for example `http://localhost:8080`)
 
 And set `GOOGLE_CLIENT_ID` in `.env`.
