@@ -16,9 +16,8 @@ services:
       retries: 10
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${APP_IMAGE:-taransuratwala/fullstack-auth-app:latest}
+    pull_policy: always
     container_name: authvault-app
     restart: unless-stopped
     depends_on:

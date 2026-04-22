@@ -84,8 +84,35 @@ Custom two-port example (Linux/macOS):
 ### Option B: Docker Compose directly
 
 ```bash
-docker compose up --build -d
+docker compose up -d
 ```
+
+If you want to force refresh from Docker Hub first:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+### Option C: Run the Docker Hub image directly
+
+Use this when a teammate has already pulled the published image and wants to run the app without building locally:
+
+```bash
+docker compose -f docker-compose.hub.yml up -d
+```
+
+Windows one-click option:
+
+```powershell
+./run-dockerhub.ps1 -Rebuild -CheckHealth
+```
+
+Windows double-click option:
+
+- Run `run-dockerhub.cmd`
+
+This starts the published app image plus PostgreSQL. Do not run the app image by itself unless you already have an external PostgreSQL database and the matching `DB_*` environment variables.
 
 ## 4) Access the app
 
@@ -158,3 +185,7 @@ If you want Google OAuth to show as configured and work in local environments:
 2. Add both local origins in Google Cloud OAuth settings, for example:
 	- `http://localhost:8080`
 	- `http://localhost:8081`
+
+## Notes for Docker Hub users
+
+If your friend sees `Failed to initialize database` after downloading the image, that means the app container is running without PostgreSQL. Use `docker-compose.hub.yml` so the database starts alongside the app.
