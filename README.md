@@ -1,3 +1,13 @@
+<p align="center">
+	<img src="https://capsule-render.vercel.app/api?type=rect&color=0:111827,100:0f766e&height=120&section=header&text=AuthVault&fontSize=36&fontColor=F8FAFC&fontAlignY=60" alt="AuthVault banner" />
+</p>
+
+<p align="center">
+	<img src="https://img.shields.io/github/last-commit/TaranSuratwala/fullstack-auth-app?style=flat-square" alt="Last commit" />
+	<img src="https://img.shields.io/github/languages/top/TaranSuratwala/fullstack-auth-app?style=flat-square" alt="Top language" />
+	<img src="https://img.shields.io/github/repo-size/TaranSuratwala/fullstack-auth-app?style=flat-square" alt="Repo size" />
+</p>
+
 # Fullstack Auth App (AuthVault)
 
 Full-stack authentication app with a React + Vite frontend and an Express + PostgreSQL backend. Supports email/password and optional Google OAuth sign-in.
@@ -14,6 +24,10 @@ Full-stack authentication app with a React + Vite frontend and an Express + Post
 - `frontend/`: React + Vite client
 - `backend/`: Express API, PostgreSQL, JWT
 - `docker-compose.yml`: app + database stack
+
+## Site Theme
+
+A GitHub Pages ready theme lives in `docs/`. Enable Pages to serve from the `/docs` folder.
 
 ## Quick Start
 

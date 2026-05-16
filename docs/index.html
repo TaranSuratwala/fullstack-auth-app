@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8' />
+  <meta name='viewport' content='width=device-width, initial-scale=1' />
+  <title>AuthVault - Fullstack Auth App</title>
+  <link rel='preconnect' href='https://fonts.googleapis.com' />
+  <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin />
+  <link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap' rel='stylesheet' />
+  <link rel='stylesheet' href='styles.css' />
+</head>
+<body>
+  <div class='bg'>
+    <span class='shape shape-one'></span>
+    <span class='shape shape-two'></span>
+    <span class='shape shape-three'></span>
+  </div>
+
+  <header class='topbar'>
+    <div class='logo'>AuthVault</div>
+    <nav class='nav'>
+      <a href='#features'>Features</a>
+      <a href='#flow'>Auth flow</a>
+      <a href='#quickstart'>Quickstart</a>
+      <a href='#deploy'>Deploy</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class='hero'>
+      <div class='hero-copy'>
+        <p class='eyebrow'>Fullstack authentication</p>
+        <h1>Secure login, clean UX, production ready.</h1>
+        <p class='lead'>
+          AuthVault ships a React client, Express API, and PostgreSQL persistence with optional Google OAuth.
+          Build quickly, deploy confidently.
+        </p>
+        <div class='cta-row'>
+          <a class='btn primary' href='#quickstart'>Launch locally</a>
+          <a class='btn ghost' href='https://github.com/TaranSuratwala/fullstack-auth-app'>View repo</a>
+        </div>
+        <div class='pill-row'>
+          <span class='pill'>JWT sessions</span>
+          <span class='pill'>PostgreSQL</span>
+          <span class='pill'>Docker Compose</span>
+        </div>
+      </div>
+      <div class='hero-panel'>
+        <div class='panel-card'>
+          <p class='panel-label'>Frontend</p>
+          <p class='panel-value'>React + Vite</p>
+          <p class='panel-note'>Fast dev server and production build.</p>
+        </div>
+        <div class='panel-card'>
+          <p class='panel-label'>Backend</p>
+          <p class='panel-value'>Express + Postgres</p>
+          <p class='panel-note'>JWT auth and Google OAuth hooks.</p>
+        </div>
+        <div class='panel-card highlight'>
+          <p class='panel-label'>Health check</p>
+          <p class='panel-value'>/api/health</p>
+          <p class='panel-note'>Monitor readiness in seconds.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id='features' class='section'>
+      <div class='section-head'>
+        <h2>Features</h2>
+        <p>Everything you need for a modern auth stack.</p>
+      </div>
+      <div class='card-grid'>
+        <article class='card'>
+          <h3>Email and password auth</h3>
+          <p>Secure hashing, validation, and JWT issuance.</p>
+        </article>
+        <article class='card'>
+          <h3>Google OAuth optional</h3>
+          <p>Enable Google login with a single env key.</p>
+        </article>
+        <article class='card'>
+          <h3>Docker first</h3>
+          <p>Spin up app and database in one command.</p>
+        </article>
+        <article class='card'>
+          <h3>Production structure</h3>
+          <p>Separate backend and frontend for clear deployments.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id='flow' class='section'>
+      <div class='section-head'>
+        <h2>Auth flow</h2>
+        <p>From signup to secure API access.</p>
+      </div>
+      <div class='steps'>
+        <div class='step'>
+          <span class='step-number'>1</span>
+          <div>
+            <h3>Create account</h3>
+            <p>POST /api/auth/register with username, email, password.</p>
+          </div>
+        </div>
+        <div class='step'>
+          <span class='step-number'>2</span>
+          <div>
+            <h3>Sign in</h3>
+            <p>POST /api/auth/login returns a JWT token.</p>
+          </div>
+        </div>
+        <div class='step'>
+          <span class='step-number'>3</span>
+          <div>
+            <h3>Access APIs</h3>
+            <p>Send JWT in the Authorization header.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id='quickstart' class='section split'>
+      <div>
+        <h2>Quickstart</h2>
+        <p>Use Docker for the fastest setup or run services locally.</p>
+      </div>
+      <div class='code-stack'>
+        <div class='code-card'>
+          <div class='code-title'>Docker</div>
+          <pre><code>copy docker.env.example .env
+docker compose up -d</code></pre>
+        </div>
+        <div class='code-card'>
+          <div class='code-title'>Local</div>
+          <pre><code>cd backend
+npm install
+npm run dev</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section id='deploy' class='section'>
+      <div class='section-head'>
+        <h2>Deployment paths</h2>
+        <p>From a local container to AWS.</p>
+      </div>
+      <div class='link-grid'>
+        <a class='link-card' href='https://github.com/TaranSuratwala/fullstack-auth-app/blob/main/DOCKER_QUICKSTART.md'>Docker quickstart</a>
+        <a class='link-card' href='https://github.com/TaranSuratwala/fullstack-auth-app/blob/main/AWS_DEPLOYMENT.md'>AWS deployment</a>
+        <a class='link-card' href='https://github.com/TaranSuratwala/fullstack-auth-app'>GitHub repository</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class='footer'>
+    <p>AuthVault keeps authentication simple, predictable, and easy to deploy.</p>
+  </footer>
+</body>
+</html>
